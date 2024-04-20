@@ -53,6 +53,7 @@ RealESRGAN::RealESRGAN(int gpuid, bool _tta_mode) {
     bicubic_3x = 0;
     bicubic_4x = 0;
     tta_mode = _tta_mode;
+    interrupt_flag = false
 }
 
 RealESRGAN::~RealESRGAN() {
