@@ -37,7 +37,7 @@ public:
     int prepadding;
 
 private:
-    bool interrupt_flag;
+    mutable bool interrupt_flag;
     ncnn::VulkanDevice *vkdev;
     ncnn::Net net;
     ncnn::Pipeline *realesrgan_preproc;

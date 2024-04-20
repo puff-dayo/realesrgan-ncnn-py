@@ -222,15 +222,10 @@ void RealESRGAN::interrupt() {
 
 
 int RealESRGAN::process(const ncnn::Mat &inimage, ncnn::Mat &outimage) const {
-    if (interrupt_flag) {
-        interrupt_flag = false;
-    }
-    
     if (!vkdev) {
         // cpu only
         return process_cpu(inimage, outimage);
     }
-
 
     const unsigned char *pixeldata = (const unsigned char *) inimage.data;
     const int w = inimage.w;
@@ -263,6 +258,7 @@ int RealESRGAN::process(const ncnn::Mat &inimage, ncnn::Mat &outimage) const {
             net.vulkan_device()->reclaim_blob_allocator(blob_vkallocator);
             net.vulkan_device()->reclaim_staging_allocator(staging_vkallocator);
             std::cout << "Processing was interrupted!" << std::endl;
+            interrupt_flag = false;
             return -1;
         }
         
@@ -315,6 +311,7 @@ int RealESRGAN::process(const ncnn::Mat &inimage, ncnn::Mat &outimage) const {
                 net.vulkan_device()->reclaim_blob_allocator(blob_vkallocator);
                 net.vulkan_device()->reclaim_staging_allocator(staging_vkallocator);
                 std::cout << "Processing was interrupted!" << std::endl;
+                interrupt_flag = false;
                 return -1;
             }
             
@@ -626,6 +623,7 @@ int RealESRGAN::process_cpu(const ncnn::Mat &inimage, ncnn::Mat &outimage) const
     for (int yi = 0; yi < ytiles; yi++) {
         if (interrupt_flag) {
             std::cout << "Processing was interrupted!" << std::endl;
+            interrupt_flag = false;
             return -1;
         }
         
@@ -637,6 +635,7 @@ int RealESRGAN::process_cpu(const ncnn::Mat &inimage, ncnn::Mat &outimage) const
         for (int xi = 0; xi < xtiles; xi++) {
             if (interrupt_flag) {
                 std::cout << "Processing was interrupted!" << std::endl;
+                interrupt_flag = false;
                 return -1;
             }
 
