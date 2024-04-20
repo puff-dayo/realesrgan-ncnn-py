@@ -222,6 +222,10 @@ void RealESRGAN::interrupt() {
 
 
 int RealESRGAN::process(const ncnn::Mat &inimage, ncnn::Mat &outimage) const {
+    if (interrupt_flag) {
+        interrupt_flag = false;
+    }
+    
     if (!vkdev) {
         // cpu only
         return process_cpu(inimage, outimage);
@@ -244,6 +248,8 @@ int RealESRGAN::process(const ncnn::Mat &inimage, ncnn::Mat &outimage) const {
     opt.workspace_vkallocator = blob_vkallocator;
     opt.staging_vkallocator = staging_vkallocator;
 
+    ncnn::VkCompute cmd(net.vulkan_device());
+
     // each tile 100x100
     const int xtiles = (w + TILE_SIZE_X - 1) / TILE_SIZE_X;
     const int ytiles = (h + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
@@ -253,6 +259,9 @@ int RealESRGAN::process(const ncnn::Mat &inimage, ncnn::Mat &outimage) const {
     //#pragma omp parallel for num_threads(2)
     for (int yi = 0; yi < ytiles; yi++) {
         if (interrupt_flag) {
+            cmd.reset();
+            net.vulkan_device()->reclaim_blob_allocator(blob_vkallocator);
+            net.vulkan_device()->reclaim_staging_allocator(staging_vkallocator);
             std::cout << "Processing was interrupted!" << std::endl;
             return -1;
         }
@@ -301,6 +310,14 @@ int RealESRGAN::process(const ncnn::Mat &inimage, ncnn::Mat &outimage) const {
         }
 
         for (int xi = 0; xi < xtiles; xi++) {
+            if (interrupt_flag) {
+                cmd.reset();
+                net.vulkan_device()->reclaim_blob_allocator(blob_vkallocator);
+                net.vulkan_device()->reclaim_staging_allocator(staging_vkallocator);
+                std::cout << "Processing was interrupted!" << std::endl;
+                return -1;
+            }
+            
             const int tile_w_nopad = std::min((xi + 1) * TILE_SIZE_X, w) - xi * TILE_SIZE_X;
 
             if (tta_mode) {
@@ -607,12 +624,22 @@ int RealESRGAN::process_cpu(const ncnn::Mat &inimage, ncnn::Mat &outimage) const
     const int ytiles = (h + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
 
     for (int yi = 0; yi < ytiles; yi++) {
+        if (interrupt_flag) {
+            std::cout << "Processing was interrupted!" << std::endl;
+            return -1;
+        }
+        
         const int tile_h_nopad = std::min((yi + 1) * TILE_SIZE_Y, h) - yi * TILE_SIZE_Y;
 
         int in_tile_y0 = std::max(yi * TILE_SIZE_Y - prepadding, 0);
         int in_tile_y1 = std::min((yi + 1) * TILE_SIZE_Y + prepadding, h);
 
         for (int xi = 0; xi < xtiles; xi++) {
+            if (interrupt_flag) {
+                std::cout << "Processing was interrupted!" << std::endl;
+                return -1;
+            }
+
             const int tile_w_nopad = std::min((xi + 1) * TILE_SIZE_X, w) - xi * TILE_SIZE_X;
 
             int in_tile_x0 = std::max(xi * TILE_SIZE_X - prepadding, 0);
