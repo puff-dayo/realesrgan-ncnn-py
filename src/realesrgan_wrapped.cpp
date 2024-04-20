@@ -80,7 +80,8 @@ PYBIND11_MODULE(realesrgan_ncnn_vulkan_wrapper, m) {
             .def(pybind11::init<int, bool>())
             .def("load", &RealESRGANWrapped::load)
             .def("process", &RealESRGANWrapped::process)
-            .def("set_parameters", &RealESRGANWrapped::set_parameters);
+            .def("set_parameters", &RealESRGANWrapped::set_parameters)
+            .def("interrupt", &RealESRGANWrapped::interrupt);
 
     pybind11::class_<RealESRGANImage>(m, "RealESRGANImage")
             .def(pybind11::init<std::string, int, int, int>())

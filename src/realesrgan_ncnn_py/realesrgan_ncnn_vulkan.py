@@ -118,6 +118,12 @@ class Realesrgan:
     def process(self) -> None:
         self._realesrgan_object.process(self.raw_in_image, self.raw_out_image)
 
+    def interrupt_processing(self):
+        """
+        Interrupt the ongoing processing operation.
+        """
+        self._realesrgan_object.interrupt()
+
     def process_pil(self, _image: Image) -> Image:
         """
         Process a PIL image

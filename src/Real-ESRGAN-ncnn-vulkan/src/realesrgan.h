@@ -16,6 +16,8 @@ public:
 
     ~RealESRGAN();
 
+    void interrupt();
+
 #if _WIN32
     int load(const std::wstring& parampath, const std::wstring& modelpath);
 #else
@@ -35,6 +37,7 @@ public:
     int prepadding;
 
 private:
+    bool interrupt_flag;
     ncnn::VulkanDevice *vkdev;
     ncnn::Net net;
     ncnn::Pipeline *realesrgan_preproc;

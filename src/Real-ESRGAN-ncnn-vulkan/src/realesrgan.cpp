@@ -216,6 +216,11 @@ int RealESRGAN::load(const std::string &parampath, const std::string &modelpath)
     return 0;
 }
 
+void RealESRGAN::interrupt() {
+    interrupt_flag = true;
+}
+
+
 int RealESRGAN::process(const ncnn::Mat &inimage, ncnn::Mat &outimage) const {
     if (!vkdev) {
         // cpu only
@@ -247,6 +252,11 @@ int RealESRGAN::process(const ncnn::Mat &inimage, ncnn::Mat &outimage) const {
 
     //#pragma omp parallel for num_threads(2)
     for (int yi = 0; yi < ytiles; yi++) {
+        if (interrupt_flag) {
+            std::cout << "Processing was interrupted!" << std::endl;
+            return -1;
+        }
+        
         const int tile_h_nopad = std::min((yi + 1) * TILE_SIZE_Y, h) - yi * TILE_SIZE_Y;
 
         int in_tile_y0 = std::max(yi * TILE_SIZE_Y - prepadding, 0);

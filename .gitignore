@@ -162,3 +162,4 @@ cython_debug/
 /src/realesrgan_ncnn_py/*.so
 /.ruff_cache/
 /tests/output.png
+/.vscode
